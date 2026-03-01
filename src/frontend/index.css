@@ -1,0 +1,360 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Self-hosted Fonts ─────────────────────────────────────────────────── */
+@font-face {
+  font-family: "Fraunces";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/assets/fonts/Fraunces.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Cabinet Grotesk";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/assets/fonts/CabinetGrotesk.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/assets/fonts/Outfit.woff2") format("woff2");
+}
+
+/* ─── CineForge Design Tokens ─────────────────────────────────────────────── */
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    /* Core palette — void black + burnished gold + deep charcoal */
+    --background:   0.07 0 0;          /* ~#0A0A0A true black */
+    --foreground:   0.94 0 0;          /* #EFEFEF warm white */
+
+    --card:         0.115 0.003 275;   /* deep charcoal w/ cool undertone */
+    --card-foreground: 0.94 0 0;
+
+    --popover:      0.13 0.003 275;
+    --popover-foreground: 0.94 0 0;
+
+    /* Gold: rich, warm, burnished — not flat yellow */
+    --primary:      0.76 0.12 88;      /* primary gold */
+    --primary-foreground: 0.07 0 0;   /* near-black on gold */
+
+    --secondary:    0.17 0.003 275;    /* dark charcoal panel */
+    --secondary-foreground: 0.88 0 0;
+
+    --muted:        0.17 0.003 275;
+    --muted-foreground: 0.60 0 0;     /* raised from 0.55 for better contrast */
+
+    --accent:       0.76 0.12 88;
+    --accent-foreground: 0.07 0 0;
+
+    --destructive:  0.62 0.22 27;
+    --destructive-foreground: 0.97 0 0;
+
+    --border:       0.21 0.005 275;
+    --input:        0.19 0.004 275;
+    --ring:         0.76 0.12 88;
+
+    --chart-1: 0.76 0.12 88;
+    --chart-2: 0.55 0.16 230;
+    --chart-3: 0.65 0.18 140;
+    --chart-4: 0.70 0.20 45;
+    --chart-5: 0.60 0.18 0;
+
+    --sidebar:                  0.09 0.002 275;
+    --sidebar-foreground:       0.90 0 0;
+    --sidebar-primary:          0.76 0.12 88;
+    --sidebar-primary-foreground: 0.07 0 0;
+    --sidebar-accent:           0.15 0.004 275;
+    --sidebar-accent-foreground: 0.90 0 0;
+    --sidebar-border:           0.19 0.004 275;
+    --sidebar-ring:             0.76 0.12 88;
+
+    /* CineForge custom tokens */
+    --gold:         0.76 0.12 88;
+    --gold-dim:     0.55 0.10 88;
+    --gold-bright:  0.86 0.14 90;
+
+    /* Glass highlight: white at top-left edge for prismatic depth */
+    --glass-highlight: oklch(1 0 0 / 0.07);
+    --glass-highlight-strong: oklch(1 0 0 / 0.10);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Outfit", sans-serif;
+    /* Subtle page-level texture for depth */
+    background-image: radial-gradient(
+      ellipse 80% 60% at 50% -10%,
+      oklch(0.14 0.008 88 / 0.4) 0%,
+      transparent 70%
+    );
+    background-attachment: fixed;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.26 0.01 88 / 0.8);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.55 0.10 88 / 0.9);
+  }
+}
+
+/* ─── Glassmorphism — layered, edge-lit panels ────────────────────────────── */
+@layer utilities {
+  /* Standard raised panel — mid-level elevation */
+  .glass-panel {
+    background: oklch(0.13 0.003 275 / 0.80);
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    /* Full border for shape, then inset highlight at top-left */
+    border: 1px solid oklch(0.28 0.008 88 / 0.22);
+    box-shadow:
+      /* Inset top+left edge highlight — glass catching light */
+      inset 1px 1px 0 oklch(1 0 0 / 0.07),
+      /* Ambient depth shadow */
+      0 2px 4px oklch(0 0 0 / 0.40),
+      0 8px 24px oklch(0 0 0 / 0.30);
+  }
+
+  /* Darker sunken panel — lower elevation (sidebars, headers) */
+  .glass-panel-dark {
+    background: oklch(0.08 0.002 275 / 0.92);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    border: 1px solid oklch(0.22 0.005 88 / 0.18);
+    box-shadow:
+      inset 1px 1px 0 oklch(1 0 0 / 0.05),
+      0 1px 3px oklch(0 0 0 / 0.50);
+  }
+
+  /* Elevated card with gold-tinted edge — for featured content */
+  .glass-panel-elevated {
+    background: oklch(0.14 0.005 275 / 0.85);
+    backdrop-filter: blur(16px) saturate(1.5);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+    border: 1px solid oklch(0.76 0.12 88 / 0.18);
+    box-shadow:
+      inset 1px 1px 0 oklch(0.76 0.12 88 / 0.12),
+      inset 0 -1px 0 oklch(0 0 0 / 0.30),
+      0 4px 16px oklch(0 0 0 / 0.50),
+      0 0 0 0.5px oklch(0.76 0.12 88 / 0.10);
+  }
+
+  /* ─── Gold typography utilities ─────────────────────────────────────── */
+  .gold-text {
+    color: oklch(0.76 0.12 88);
+  }
+
+  /* Rich, multi-stop gradient — warm to amber-gold to bright peak */
+  .gold-gradient {
+    background: linear-gradient(
+      135deg,
+      oklch(0.88 0.13 92) 0%,    /* bright champagne peak */
+      oklch(0.78 0.14 88) 30%,   /* rich gold */
+      oklch(0.68 0.14 75) 65%,   /* deep amber */
+      oklch(0.80 0.12 88) 100%   /* warm return */
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Heading treatment — tight tracking, subtle drop for depth */
+  .heading-cinematic {
+    font-family: "Fraunces", serif;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    text-shadow: 0 2px 12px oklch(0.76 0.12 88 / 0.15);
+  }
+
+  /* Subheading / label treatment */
+  .label-cinematic {
+    font-family: "Cabinet Grotesk", sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: oklch(0.60 0 0);
+    font-size: 0.65rem;
+  }
+
+  .gold-border {
+    border-color: oklch(0.76 0.12 88 / 0.45);
+  }
+
+  .gold-glow {
+    box-shadow:
+      0 0 20px oklch(0.76 0.12 88 / 0.25),
+      0 0 60px oklch(0.76 0.12 88 / 0.08);
+  }
+
+  .cinematic-shadow {
+    box-shadow:
+      0 1px 2px oklch(0 0 0 / 0.60),
+      0 4px 8px oklch(0 0 0 / 0.45),
+      0 12px 24px oklch(0 0 0 / 0.30);
+  }
+
+  .film-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)' opacity='0.15'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0.4;
+    mix-blend-mode: overlay;
+  }
+
+  .timeline-clip {
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .timeline-clip:active {
+    cursor: grabbing;
+  }
+
+  .text-overlay-item {
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* ─── Film Grain Animation ────────────────────────────────────────────────── */
+@keyframes grain-shift {
+  0%  { transform: translate(0, 0); }
+  10% { transform: translate(-2%, -3%); }
+  20% { transform: translate(3%, 2%); }
+  30% { transform: translate(-1%, 4%); }
+  40% { transform: translate(2%, -1%); }
+  50% { transform: translate(-3%, 1%); }
+  60% { transform: translate(1%, -2%); }
+  70% { transform: translate(-2%, 3%); }
+  80% { transform: translate(3%, -1%); }
+  90% { transform: translate(-1%, 2%); }
+  100%{ transform: translate(0, 0); }
+}
+
+.grain-overlay {
+  animation: grain-shift 0.2s steps(1) infinite;
+}
+
+/* ─── Gold Button — rich multi-stop gradient with inner edge highlight ───── */
+.btn-gold {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    oklch(0.86 0.13 90) 0%,    /* bright champagne top */
+    oklch(0.76 0.14 88) 35%,   /* rich mid-gold */
+    oklch(0.66 0.13 75) 70%,   /* deep amber */
+    oklch(0.72 0.12 82) 100%   /* warm close */
+  );
+  color: oklch(0.10 0.005 88);  /* very dark warm-black text */
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: none;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.15s ease,
+    filter 0.2s ease;
+  /* Inner highlight — makes button feel raised/convex */
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.30),
+    inset 0 -1px 0 oklch(0 0 0 / 0.25),
+    0 1px 3px oklch(0 0 0 / 0.50),
+    0 4px 12px oklch(0.76 0.12 88 / 0.15);
+}
+.btn-gold:hover {
+  filter: brightness(1.08) saturate(1.1);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.35),
+    inset 0 -1px 0 oklch(0 0 0 / 0.20),
+    0 2px 6px oklch(0 0 0 / 0.50),
+    0 6px 24px oklch(0.76 0.12 88 / 0.40),
+    0 0 48px oklch(0.76 0.12 88 / 0.12);
+  transform: translateY(-1px);
+}
+.btn-gold:active {
+  filter: brightness(0.96);
+  transform: translateY(0.5px);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.20),
+    inset 0 2px 4px oklch(0 0 0 / 0.20),
+    0 1px 2px oklch(0 0 0 / 0.40),
+    0 2px 8px oklch(0.76 0.12 88 / 0.20);
+}
+.btn-gold:focus-visible {
+  outline: 2px solid oklch(0.76 0.12 88 / 0.8);
+  outline-offset: 2px;
+}
+
+/* ─── Scene Player — fade-in text animation ──────────────────────────────── */
+@keyframes scene-text-in {
+  0%  { opacity: 0; transform: translateY(18px) scale(0.97); }
+  60% { opacity: 1; transform: translateY(-2px) scale(1.005); }
+  100%{ opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.scene-text-enter {
+  animation: scene-text-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ─── Timeline shimmer for active scene ────────────────────────────────── */
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ─── Active timeline clip ────────────────────────────────────────────────── */
+.clip-selected {
+  box-shadow:
+    0 0 0 2px oklch(0.76 0.12 88),
+    0 0 12px oklch(0.76 0.12 88 / 0.35),
+    inset 0 1px 0 oklch(1 0 0 / 0.15);
+}
+
+/* ─── Nav active state — gold gradient left accent ───────────────────────── */
+.nav-active {
+  background: linear-gradient(
+    90deg,
+    oklch(0.76 0.12 88 / 0.14) 0%,
+    oklch(0.76 0.12 88 / 0.06) 100%
+  );
+  border: 1px solid oklch(0.76 0.12 88 / 0.22);
+  box-shadow: inset 3px 0 0 oklch(0.76 0.12 88 / 0.8);
+}
+
+/* ─── Stat card value — display number treatment ────────────────────────── */
+.stat-value {
+  font-family: "Fraunces", serif;
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
