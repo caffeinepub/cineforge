@@ -1,53 +1,40 @@
 # CineForge
 
 ## Current State
-The app has a fully functional AI Director page (`/ai-director`) with:
-- Script input with style presets (Luxury Real Estate, Corporate, etc.)
-- Script analysis: emotion, luxury level, buyer personas, hook score, time of day
-- Storyboard generation: scenes with shot types, camera moves, lighting, director notes
-- SceneStoryboard grid component with editable duration and cycling shot types
-- `scriptAnalysis.ts` utility with all analysis and generation logic
-
-Missing from the Director Engine:
-- **Property type detection** (villa, penthouse, commercial office, etc.)
-- **Explicit lighting mood labels** (currently generated per shot type, not displayed prominently)
-- **Structured scene output card** matching the format: Scene N | Type | Lighting | Duration | Emotion
+The app has:
+- Dashboard, Project Library, Editor (multi-layer timeline, script tab, text overlays), Presets Gallery, Subscription, AI Director Engine, and Pipeline pages
+- AI Director Engine: script analysis, emotion/luxury detection, buyer personas, hook scoring, cinematic scene plan generation (shot type, lighting, duration, emotion per scene)
+- Editor: cinematic scene player with CSS filters, voice narration (Web Speech API), animated stars, typewriter text
+- Dark gold cinematic theme, glassmorphism UI
 
 ## Requested Changes (Diff)
 
 ### Add
-- `propertyType` field to `ScriptAnalysis` interface with detection logic (villa, penthouse, commercial, residential, development, land, hotel, other)
-- Property type detection function using keyword matching in `scriptAnalysis.ts`
-- `lightingMood` field (short golden-hour-style label) to `DirectorScene` interface  
-- Property type badge displayed in the AI Director Analysis panel
-- Redesigned SceneStoryboard cards with explicit structured output labels: "Scene N", "Type:", "Lighting:", "Duration:", "Emotion:"
-- A "Copy Scene Plan" button that exports the structured plan as plain text matching the user's requested format
-- Prominent "Scene Plan Output" section in the storyboard showing the structured plan in a code-like panel
+- **VideoGenPage** (`/video-gen`): A dedicated Video Generation Layer using Option B — Smart Cinematic Auto Builder
+  - Script input → scene tag extraction → footage category matching → cinematic effect preview
+  - 6 toggleable cinematic effects per scene: Camera Zoom Simulation, Depth Blur, Cinematic LUT, Light Leaks, Slow Motion, Motion Interpolation
+  - 5 LUT presets: Moody Drama, Golden Hour, Dark Thriller, Vintage Film, Teal & Orange
+  - Effect intensity sliders (per-effect and global)
+  - Scene cards on the left with auto-matched premium footage category label (e.g. "Aerial 4K – Luxury Villa Exterior")
+  - Cinematic preview in the center: animated shot type motion, letterbox bars, typewriter scene text, film grain, all 6 effects composited
+  - Each shot type (drone aerial, dolly push, crane, interior pan, etc.) has distinct CSS animation
+  - Footage category auto-matched from script's detected property type + scene's shot type
+  - Export tier display: FREE shows 720p watermarked, PRO shows 4K no watermark
+  - "Generate Video" button that runs through scenes sequentially with animated transitions
 
 ### Modify
-- `ScriptAnalysis` interface: add `propertyType` field
-- `DirectorScene` interface: add `lightingMood` string (short label like "Golden hour", "Blue hour")
-- `analyzeScript()`: add property type detection
-- `generateDirectorScenePlan()`: populate `lightingMood` as a short label
-- `SceneStoryboard`: redesign cards to display Type/Lighting/Duration/Emotion structure clearly
-- `AIDirectorPage`: show property type badge in the analysis panel
+- **App.tsx**: Add route `/video-gen` → VideoGenPage
+- **AppShell / sidebar**: Add "Video Gen" nav item with teal/cyan accent
 
 ### Remove
 - Nothing removed
 
 ## Implementation Plan
-1. Update `scriptAnalysis.ts`:
-   - Add `propertyType` to `ScriptAnalysis` interface
-   - Add `lightingMood` to `DirectorScene` interface
-   - Add property type keyword detection
-   - Add `lightingMoodLabel` short-form mapping per shot type + time of day
-   - Update `analyzeScript()` to populate `propertyType`
-   - Update `generateDirectorScenePlan()` to populate `lightingMood`
-
-2. Update `SceneStoryboard.tsx`:
-   - Redesign SceneCard to show structured output: Scene N | Type | Lighting | Duration | Emotion
-   - Add a "Structured Plan" panel below the grid with copyable text output
-
-3. Update `AIDirectorPage.tsx`:
-   - Add property type badge to the analysis panel (next to emotion badge)
-   - Show property type icon and label
+1. Create `src/pages/VideoGenPage.tsx` with full Option B UI: 3-column layout (scene list | cinematic preview | effect controls)
+2. Add footage category matching logic inside the page (maps shot type + property type → label)
+3. Build cinematic preview component: CSS animations per shot type, WebGL-style CSS filters, letterbox, film grain overlay, light leak animation
+4. Add LUT swatches as CSS filter presets
+5. Add toggles and sliders for 6 effects
+6. Add scene auto-play with black flash transitions
+7. Register `/video-gen` route in App.tsx
+8. Add sidebar nav link in AppShell

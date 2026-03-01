@@ -19,18 +19,27 @@ import {
   LogOut,
   Sparkles,
   User,
+  Video,
 } from "lucide-react";
 import { motion } from "motion/react";
 import type React from "react";
 
 const NAV_ITEMS = [
-  { to: "/", label: "Dashboard", icon: Home, gold: false, accent: false },
+  {
+    to: "/",
+    label: "Dashboard",
+    icon: Home,
+    gold: false,
+    accent: false,
+    teal: false,
+  },
   {
     to: "/ai-director",
     label: "AI Director",
     icon: Clapperboard,
     gold: true,
     accent: false,
+    teal: false,
   },
   {
     to: "/pipeline",
@@ -38,6 +47,15 @@ const NAV_ITEMS = [
     icon: GitBranch,
     gold: false,
     accent: true,
+    teal: false,
+  },
+  {
+    to: "/video-gen",
+    label: "Video Gen",
+    icon: Video,
+    gold: false,
+    accent: false,
+    teal: true,
   },
   {
     to: "/projects",
@@ -45,6 +63,7 @@ const NAV_ITEMS = [
     icon: FolderOpen,
     gold: false,
     accent: false,
+    teal: false,
   },
   {
     to: "/presets",
@@ -52,6 +71,7 @@ const NAV_ITEMS = [
     icon: Sparkles,
     gold: false,
     accent: false,
+    teal: false,
   },
   {
     to: "/subscription",
@@ -59,6 +79,7 @@ const NAV_ITEMS = [
     icon: Crown,
     gold: false,
     accent: false,
+    teal: false,
   },
 ];
 
@@ -118,7 +139,7 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 flex flex-col gap-0.5 px-2 py-3">
-          {NAV_ITEMS.map(({ to, label, icon: Icon, gold, accent }) => (
+          {NAV_ITEMS.map(({ to, label, icon: Icon, gold, accent, teal }) => (
             <NavItem
               key={to}
               to={to}
@@ -126,6 +147,7 @@ export default function Sidebar() {
               Icon={Icon}
               gold={gold}
               accent={accent}
+              teal={teal}
             />
           ))}
         </nav>
@@ -185,18 +207,36 @@ function NavItem({
   Icon,
   gold = false,
   accent = false,
+  teal = false,
 }: {
   to: string;
   label: string;
   Icon: React.ComponentType<{ className?: string }>;
   gold?: boolean;
   accent?: boolean;
+  teal?: boolean;
 }) {
   const matchRoute = useMatchRoute();
   const isActive = matchRoute({ to, fuzzy: to !== "/" });
 
   // accent = pipeline blue color
   const accentColor = "oklch(0.65 0.14 240)";
+  // teal = video gen teal color
+  const tealColor = "oklch(0.65 0.14 175)";
+
+  const activeStyle =
+    !isActive && accent
+      ? { color: `${accentColor}B3` }
+      : !isActive && teal
+        ? { color: `${tealColor}B3` }
+        : undefined;
+
+  const activeLabelStyle =
+    !isActive && accent
+      ? { color: `${accentColor}CC` }
+      : !isActive && teal
+        ? { color: `${tealColor}CC` }
+        : undefined;
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -209,13 +249,11 @@ function NavItem({
                 ? "nav-active text-primary"
                 : gold
                   ? "text-primary/70 hover:text-primary hover:bg-primary/[0.06]"
-                  : accent
+                  : accent || teal
                     ? "hover:bg-white/[0.05]"
                     : "text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.05]"
             }`}
-            style={
-              !isActive && accent ? { color: `${accentColor}B3` } : undefined
-            }
+            style={activeStyle}
           >
             <span
               className={`w-4 h-4 shrink-0 transition-colors flex items-center justify-center ${
@@ -225,9 +263,7 @@ function NavItem({
                     ? "text-primary/70 group-hover:text-primary"
                     : "group-hover:text-foreground"
               }`}
-              style={
-                !isActive && accent ? { color: `${accentColor}B3` } : undefined
-              }
+              style={activeStyle}
             >
               <Icon className="w-4 h-4" />
             </span>
@@ -239,9 +275,7 @@ function NavItem({
                     ? "text-primary/80 group-hover:text-primary"
                     : ""
               }`}
-              style={
-                !isActive && accent ? { color: `${accentColor}CC` } : undefined
-              }
+              style={activeLabelStyle}
             >
               {label}
             </span>
@@ -254,6 +288,13 @@ function NavItem({
               <span
                 className="hidden lg:block ml-auto w-1.5 h-1.5 rounded-full shrink-0"
                 style={{ background: accentColor }}
+              />
+            )}
+            {/* Teal accent dot for Video Gen */}
+            {teal && !isActive && (
+              <span
+                className="hidden lg:block ml-auto w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ background: tealColor }}
               />
             )}
           </Link>

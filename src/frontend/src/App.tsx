@@ -22,6 +22,7 @@ import PipelinePage from "@/pages/PipelinePage";
 import PresetsPage from "@/pages/PresetsPage";
 import ProjectsPage from "@/pages/ProjectsPage";
 import SubscriptionPage from "@/pages/SubscriptionPage";
+import VideoGenPage from "@/pages/VideoGenPage";
 
 // Root route with AppShell layout
 const rootRoute = createRootRoute({
@@ -65,6 +66,12 @@ const pipelineRoute = createRoute({
   component: PipelinePage,
 });
 
+const videoGenRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/video-gen",
+  component: VideoGenPage,
+});
+
 const editorNewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/editor/new",
@@ -98,6 +105,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   aiDirectorRoute,
   pipelineRoute,
+  videoGenRoute,
   projectsRoute,
   presetsRoute,
   subscriptionRoute,
