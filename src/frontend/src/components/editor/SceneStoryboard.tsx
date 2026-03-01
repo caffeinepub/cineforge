@@ -9,7 +9,9 @@ import type { DirectorScene } from "@/utils/scriptAnalysis";
 import { getEmotionColor, getShotTypeLabel } from "@/utils/scriptAnalysis";
 import {
   Aperture,
+  ChevronDown,
   Clapperboard,
+  ClipboardCopy,
   Grid3X3,
   Maximize2,
   Move,
@@ -17,8 +19,9 @@ import {
   Zap,
   ZoomIn,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import React, { useState } from "react";
+import { toast } from "sonner";
 
 // ─── Shot type icon mapping ───────────────────────────────────────────────────
 
@@ -72,6 +75,11 @@ const SHOT_TYPES: DirectorScene["shotType"][] = [
   "crane-shot",
 ];
 
+// Capitalize first letter of each word
+function titleCase(str: string): string {
+  return str.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function SceneCard({
   scene,
   index,
@@ -94,6 +102,92 @@ function SceneCard({
     setEditingDuration(false);
   };
 
+  // Structured data rows
+  const dataRows: {
+    label: string;
+    value: React.ReactNode;
+    isEditable?: boolean;
+  }[] = [
+    {
+      label: "Type",
+      value: (
+        <span
+          className="flex items-center gap-1"
+          style={{ color: emotionColor }}
+        >
+          <ShotIcon
+            shotType={scene.shotType}
+            className="w-2.5 h-2.5 shrink-0"
+          />
+          <span className="font-semibold">
+            {getShotTypeLabel(scene.shotType).replace(/_/g, " ")}
+          </span>
+        </span>
+      ),
+    },
+    {
+      label: "Lighting",
+      value: (
+        <span className="text-foreground/70 font-medium">
+          {scene.lightingMood}
+        </span>
+      ),
+    },
+    {
+      label: "Duration",
+      isEditable: true,
+      value: editingDuration ? (
+        <input
+          // biome-ignore lint/a11y/noAutofocus: intentional focus for inline edit
+          autoFocus
+          type="number"
+          min={1}
+          max={60}
+          value={durationInput}
+          onChange={(e) => setDurationInput(e.target.value)}
+          onBlur={handleDurationCommit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleDurationCommit();
+            if (e.key === "Escape") setEditingDuration(false);
+          }}
+          className="w-14 text-[10px] font-mono text-center rounded px-1 py-0.5 bg-black/60 border focus:outline-none"
+          style={{ borderColor: emotionColor, color: emotionColor }}
+        />
+      ) : (
+        <button
+          type="button"
+          className="cursor-pointer bg-transparent border-0 p-0"
+          onClick={() => {
+            setEditingDuration(true);
+            setDurationInput(formatDurationSec(scene.durationMs).toString());
+          }}
+        >
+          <span
+            className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border transition-colors hover:brightness-125"
+            style={{
+              color: emotionColor,
+              borderColor: `${emotionColor}44`,
+              background: `${emotionColor}12`,
+            }}
+          >
+            {formatDurationSec(scene.durationMs)}s
+          </span>
+        </button>
+      ),
+    },
+    {
+      label: "Emotion",
+      value: (
+        <span
+          className="font-semibold capitalize"
+          style={{ color: emotionColor }}
+        >
+          {titleCase(scene.emotion)}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 18, scale: 0.96 }}
@@ -103,7 +197,7 @@ function SceneCard({
         duration: 0.4,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className="group glass-panel rounded-xl overflow-hidden relative"
+      className="group glass-panel rounded-xl overflow-hidden relative flex flex-col"
       style={{
         borderColor: `${emotionColor}30`,
         borderWidth: "1px",
@@ -121,7 +215,7 @@ function SceneCard({
 
       {/* Aspect-video thumbnail preview */}
       <div
-        className="relative w-full overflow-hidden"
+        className="relative w-full overflow-hidden shrink-0"
         style={{ paddingBottom: "56.25%" }} // 16:9 ratio
       >
         <div
@@ -194,89 +288,226 @@ function SceneCard({
         </div>
       </div>
 
-      {/* Card info */}
-      <div className="p-2.5 space-y-1.5">
-        {/* Camera + duration row */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <p
-              className="text-[9px] font-semibold truncate"
-              style={{ color: emotionColor }}
-            >
-              {scene.cameraMove}
-            </p>
-            <p className="text-[9px] text-muted-foreground/50 truncate">
-              {scene.lighting}
-            </p>
-          </div>
+      {/* ── Structured data grid ─────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col">
+        {/* Scene label heading */}
+        <div
+          className="px-2.5 pt-2.5 pb-1 flex items-center gap-1.5"
+          style={{ borderBottom: `1px solid ${emotionColor}18` }}
+        >
+          <span
+            className="text-[8px] font-mono font-bold uppercase tracking-[0.15em]"
+            style={{ color: `${emotionColor}80` }}
+          >
+            SCENE {String(index + 1).padStart(2, "0")}
+          </span>
+        </div>
 
-          {/* Editable duration badge */}
-          <TooltipProvider delayDuration={100}>
+        {/* Data rows */}
+        <div className="px-2.5 py-2 space-y-1.5">
+          {dataRows.map((row) => (
+            <div
+              key={row.label}
+              className="flex items-center gap-1.5 min-h-[18px]"
+            >
+              <span
+                className="text-[8px] font-mono font-semibold uppercase tracking-widest w-14 shrink-0"
+                style={{ color: "oklch(0.45 0 0)" }}
+              >
+                {row.label}:
+              </span>
+              <div className="text-[10px] flex-1 min-w-0">{row.value}</div>
+            </div>
+          ))}
+
+          {/* Divider */}
+          <div
+            className="my-1.5"
+            style={{ borderTop: `1px solid ${emotionColor}18` }}
+          />
+
+          {/* Director notes */}
+          <p className="text-[9px] text-muted-foreground/50 italic leading-snug line-clamp-2">
+            &ldquo;{scene.directorNotes}&rdquo;
+          </p>
+        </div>
+
+        {/* Cycle shot type button */}
+        <div className="mt-auto px-2.5 pb-2.5">
+          <button
+            type="button"
+            onClick={() => onCycleShotType(scene.id)}
+            className="w-full flex items-center justify-center gap-1 py-1 rounded text-[8px] font-semibold uppercase tracking-widest transition-colors hover:bg-white/[0.05] text-muted-foreground/40 hover:text-muted-foreground/80"
+            style={{ border: `1px solid ${emotionColor}14` }}
+          >
+            <ShotIcon shotType={scene.shotType} className="w-2 h-2" />
+            Change Shot
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Structured Scene Plan Panel ──────────────────────────────────────────────
+
+interface StructuredPlanPanelProps {
+  scenes: DirectorScene[];
+}
+
+function StructuredPlanPanel({ scenes }: StructuredPlanPanelProps) {
+  const [open, setOpen] = useState(true);
+
+  const planText = scenes
+    .map(
+      (s, i) =>
+        `Scene ${i + 1} | Type: ${getShotTypeLabel(s.shotType).replace(/_/g, " ")} | Lighting: ${s.lightingMood} | Duration: ${formatDurationSec(s.durationMs)}s | Emotion: ${titleCase(s.emotion)}`,
+    )
+    .join("\n");
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(planText);
+      toast.success("Scene plan copied to clipboard");
+    } catch {
+      toast.error("Could not copy to clipboard");
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.15, duration: 0.4 }}
+      className="rounded-xl overflow-hidden"
+      style={{
+        background: "oklch(0.08 0.004 275 / 0.85)",
+        border: "1px solid oklch(0.22 0.005 275 / 0.6)",
+      }}
+    >
+      {/* Panel header */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 group"
+      >
+        <div className="flex items-center gap-2">
+          <span
+            className="text-[10px] font-mono font-bold uppercase tracking-[0.18em]"
+            style={{ color: "oklch(0.76 0.12 88)" }}
+          >
+            ◆ Structured Scene Plan
+          </span>
+          <span
+            className="text-[9px] font-mono px-2 py-0.5 rounded"
+            style={{
+              background: "oklch(0.76 0.12 88 / 0.12)",
+              color: "oklch(0.76 0.12 88 / 0.7)",
+              border: "1px solid oklch(0.76 0.12 88 / 0.2)",
+            }}
+          >
+            {scenes.length} SCENES
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="shrink-0 cursor-pointer bg-transparent border-0 p-0"
-                  onClick={() => {
-                    setEditingDuration(true);
-                    setDurationInput(
-                      formatDurationSec(scene.durationMs).toString(),
-                    );
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopy();
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded text-[9px] font-semibold transition-all hover:brightness-125 active:scale-95"
+                  style={{
+                    background: "oklch(0.76 0.12 88 / 0.10)",
+                    border: "1px solid oklch(0.76 0.12 88 / 0.25)",
+                    color: "oklch(0.76 0.12 88)",
                   }}
                 >
-                  {editingDuration ? (
-                    <input
-                      // biome-ignore lint/a11y/noAutofocus: intentional focus for inline edit
-                      autoFocus
-                      type="number"
-                      min={1}
-                      max={60}
-                      value={durationInput}
-                      onChange={(e) => setDurationInput(e.target.value)}
-                      onBlur={handleDurationCommit}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleDurationCommit();
-                        if (e.key === "Escape") setEditingDuration(false);
-                      }}
-                      className="w-12 text-[10px] font-mono text-center rounded px-1 py-0.5 bg-black/60 border focus:outline-none"
-                      style={{ borderColor: emotionColor, color: emotionColor }}
-                    />
-                  ) : (
-                    <span
-                      className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border transition-colors hover:brightness-125"
-                      style={{
-                        color: emotionColor,
-                        borderColor: `${emotionColor}44`,
-                        background: `${emotionColor}12`,
-                      }}
-                    >
-                      {formatDurationSec(scene.durationMs)}s
-                    </span>
-                  )}
+                  <ClipboardCopy className="w-3 h-3" />
+                  Copy Plan
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-[10px]">
-                Click to edit duration
+                Copy full scene plan to clipboard
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+          <ChevronDown
+            className="w-3.5 h-3.5 transition-transform text-muted-foreground/40"
+            style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+          />
         </div>
+      </button>
 
-        {/* Director notes */}
-        <p className="text-[9px] text-muted-foreground/50 italic leading-snug line-clamp-2">
-          &ldquo;{scene.directorNotes}&rdquo;
-        </p>
-
-        {/* Cycle shot type button */}
-        <button
-          type="button"
-          onClick={() => onCycleShotType(scene.id)}
-          className="w-full flex items-center justify-center gap-1 py-1 rounded text-[8px] font-semibold uppercase tracking-widest transition-colors hover:bg-white/[0.05] text-muted-foreground/40 hover:text-muted-foreground/80"
-        >
-          <ShotIcon shotType={scene.shotType} className="w-2 h-2" />
-          Change Shot
-        </button>
-      </div>
+      {/* Collapsible content */}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div
+              className="px-4 pb-4"
+              style={{ borderTop: "1px solid oklch(0.22 0.005 275 / 0.5)" }}
+            >
+              <pre
+                className="mt-3 text-[10px] font-mono leading-[1.9] overflow-x-auto select-all"
+                style={{
+                  color: "oklch(0.70 0.005 275)",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
+              >
+                {scenes.map((s, i) => {
+                  const shotLabel = getShotTypeLabel(s.shotType).replace(
+                    /_/g,
+                    " ",
+                  );
+                  const emotionLabel = titleCase(s.emotion);
+                  const emotionColor = getEmotionColor(s.emotion);
+                  return (
+                    <span key={s.id} className="block">
+                      <span style={{ color: "oklch(0.50 0 0)" }}>
+                        Scene {i + 1}
+                      </span>
+                      <span style={{ color: "oklch(0.35 0 0)" }}> | </span>
+                      <span style={{ color: "oklch(0.55 0 0)" }}>Type: </span>
+                      <span style={{ color: emotionColor }}>{shotLabel}</span>
+                      <span style={{ color: "oklch(0.35 0 0)" }}> | </span>
+                      <span style={{ color: "oklch(0.55 0 0)" }}>
+                        Lighting:{" "}
+                      </span>
+                      <span style={{ color: "oklch(0.65 0.02 88)" }}>
+                        {s.lightingMood}
+                      </span>
+                      <span style={{ color: "oklch(0.35 0 0)" }}> | </span>
+                      <span style={{ color: "oklch(0.55 0 0)" }}>
+                        Duration:{" "}
+                      </span>
+                      <span style={{ color: "oklch(0.70 0.08 60)" }}>
+                        {formatDurationSec(s.durationMs)}s
+                      </span>
+                      <span style={{ color: "oklch(0.35 0 0)" }}> | </span>
+                      <span style={{ color: "oklch(0.55 0 0)" }}>
+                        Emotion:{" "}
+                      </span>
+                      <span style={{ color: emotionColor }}>
+                        {emotionLabel}
+                      </span>
+                    </span>
+                  );
+                })}
+              </pre>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -325,7 +556,7 @@ export default function SceneStoryboard({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -334,7 +565,8 @@ export default function SceneStoryboard({
           </h3>
           <p className="text-[11px] text-muted-foreground/50 mt-0.5">
             {localScenes.length} scene{localScenes.length !== 1 ? "s" : ""} ·{" "}
-            {totalDurationSec}s runtime · Click duration or shot to edit
+            {totalDurationSec}s runtime · Click duration to edit · Click "Change
+            Shot" to cycle
           </p>
         </div>
       </div>
@@ -351,6 +583,9 @@ export default function SceneStoryboard({
           />
         ))}
       </div>
+
+      {/* Structured Scene Plan panel */}
+      {localScenes.length > 0 && <StructuredPlanPanel scenes={localScenes} />}
 
       {/* Launch button */}
       <motion.div

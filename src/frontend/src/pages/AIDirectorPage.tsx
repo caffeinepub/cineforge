@@ -11,11 +11,13 @@ import {
 import { useProjectContext } from "@/contexts/ProjectContext";
 import {
   type DirectorScene,
+  type PropertyType,
   type ScriptAnalysis,
   analyzeScript,
   generateDirectorScenePlan,
   getEmotionColor,
   getMusicMoodLabel,
+  getPropertyTypeLabel,
 } from "@/utils/scriptAnalysis";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -26,7 +28,10 @@ import {
   Clapperboard,
   Crown,
   Film,
+  Home,
+  Hotel,
   Lightbulb,
+  Map as MapIcon,
   Mic,
   Music,
   Sparkles,
@@ -189,6 +194,31 @@ const EMOTION_LABELS: Record<ScriptAnalysis["emotion"], string> = {
   mysterious: "Mysterious",
   epic: "Epic",
 };
+
+// ─── Property type badge ──────────────────────────────────────────────────────
+
+function getPropertyTypeIcon(type: PropertyType): React.ReactNode {
+  switch (type) {
+    case "villa":
+      return <Crown className="w-3.5 h-3.5" />;
+    case "penthouse":
+      return <Building2 className="w-3.5 h-3.5" />;
+    case "mansion":
+      return <Crown className="w-3.5 h-3.5" />;
+    case "commercial":
+      return <Building2 className="w-3.5 h-3.5" />;
+    case "residential":
+      return <Home className="w-3.5 h-3.5" />;
+    case "development":
+      return <MapIcon className="w-3.5 h-3.5" />;
+    case "land":
+      return <MapIcon className="w-3.5 h-3.5" />;
+    case "hotel":
+      return <Hotel className="w-3.5 h-3.5" />;
+    case "other":
+      return <Star className="w-3.5 h-3.5" />;
+  }
+}
 
 // ─── Keyword highlighter ──────────────────────────────────────────────────────
 
@@ -624,23 +654,45 @@ export default function AIDirectorPage() {
                 <div className="space-y-4">
                   {/* Emotion + mood */}
                   <div className="flex items-start gap-4">
-                    {/* Large emotion badge */}
-                    <div
-                      className="flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border shrink-0"
-                      style={{
-                        background: `${emotionColor}12`,
-                        borderColor: `${emotionColor}44`,
-                      }}
-                    >
-                      <span style={{ color: emotionColor }}>
-                        {EMOTION_ICONS[displayAnalysis.emotion]}
-                      </span>
-                      <span
-                        className="text-xs font-bold uppercase tracking-widest"
-                        style={{ color: emotionColor }}
+                    {/* Badges row: emotion + property type */}
+                    <div className="flex flex-col gap-2 shrink-0">
+                      {/* Large emotion badge */}
+                      <div
+                        className="flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border"
+                        style={{
+                          background: `${emotionColor}12`,
+                          borderColor: `${emotionColor}44`,
+                        }}
                       >
-                        {EMOTION_LABELS[displayAnalysis.emotion]}
-                      </span>
+                        <span style={{ color: emotionColor }}>
+                          {EMOTION_ICONS[displayAnalysis.emotion]}
+                        </span>
+                        <span
+                          className="text-xs font-bold uppercase tracking-widest"
+                          style={{ color: emotionColor }}
+                        >
+                          {EMOTION_LABELS[displayAnalysis.emotion]}
+                        </span>
+                      </div>
+
+                      {/* Property type badge */}
+                      <div
+                        className="flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl border"
+                        style={{
+                          background: "oklch(0.65 0.10 240 / 0.10)",
+                          borderColor: "oklch(0.65 0.10 240 / 0.35)",
+                        }}
+                      >
+                        <span style={{ color: "oklch(0.65 0.10 240)" }}>
+                          {getPropertyTypeIcon(displayAnalysis.propertyType)}
+                        </span>
+                        <span
+                          className="text-[9px] font-bold uppercase tracking-widest text-center leading-tight"
+                          style={{ color: "oklch(0.65 0.10 240)" }}
+                        >
+                          {getPropertyTypeLabel(displayAnalysis.propertyType)}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Mood description + time of day */}

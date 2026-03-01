@@ -1,9 +1,21 @@
 // ─── Script Analysis Utility ─────────────────────────────────────────────────
 // Pure utility — no React, no side effects
 
+export type PropertyType =
+  | "villa"
+  | "penthouse"
+  | "mansion"
+  | "commercial"
+  | "residential"
+  | "development"
+  | "land"
+  | "hotel"
+  | "other";
+
 export interface ScriptAnalysis {
   emotion: "luxury" | "dramatic" | "warm" | "corporate" | "mysterious" | "epic";
   luxuryLevel: number; // 0-100
+  propertyType: PropertyType;
   personaTags: string[]; // e.g. ["High-end Investor", "Luxury Buyer"]
   hookScore: number; // 0-100
   hookSuggestions: string[]; // 3 improvement tips
@@ -26,6 +38,7 @@ export interface DirectorScene {
     | "crane-shot";
   cameraMove: string;
   lighting: string;
+  lightingMood: string; // Short label e.g. "Golden hour", "Blue hour"
   musicMood:
     | "epic-rise"
     | "luxury-ambient"
@@ -187,6 +200,126 @@ const MYSTERIOUS_WORDS = [
   "obscured",
 ];
 
+// ─── Property type keyword banks ─────────────────────────────────────────────
+
+const PROPERTY_KEYWORDS: Record<PropertyType, string[]> = {
+  villa: [
+    "villa",
+    "mediterranean",
+    "tuscany",
+    "provencal",
+    "resort villa",
+    "beach villa",
+    "poolside",
+    "terrace villa",
+  ],
+  penthouse: [
+    "penthouse",
+    "rooftop",
+    "sky residence",
+    "top floor",
+    "skyline",
+    "panoramic city",
+    "skyscraper",
+    "high rise",
+    "highrise",
+  ],
+  mansion: [
+    "mansion",
+    "manor",
+    "chateau",
+    "estate house",
+    "grand estate",
+    "stately home",
+    "heritage home",
+  ],
+  commercial: [
+    "office",
+    "commercial",
+    "corporate",
+    "workspace",
+    "co-working",
+    "business park",
+    "headquarters",
+    "retail",
+    "showroom",
+  ],
+  residential: [
+    "apartment",
+    "condo",
+    "condominium",
+    "townhouse",
+    "terraced",
+    "semi-detached",
+    "family home",
+    "suburban",
+    "neighbourhood",
+  ],
+  development: [
+    "development",
+    "project",
+    "launch",
+    "under construction",
+    "new build",
+    "off-plan",
+    "pre-launch",
+    "masterplan",
+  ],
+  land: [
+    "land",
+    "plot",
+    "acre",
+    "hectare",
+    "parcel",
+    "farmland",
+    "countryside",
+    "agricultural",
+  ],
+  hotel: [
+    "hotel",
+    "boutique hotel",
+    "resort",
+    "hospitality",
+    "spa",
+    "amenities",
+    "concierge",
+    "suite",
+  ],
+  other: [],
+};
+
+function detectPropertyType(text: string): PropertyType {
+  const lower = text.toLowerCase();
+  const scores: Partial<Record<PropertyType, number>> = {};
+
+  for (const [type, keywords] of Object.entries(PROPERTY_KEYWORDS) as [
+    PropertyType,
+    string[],
+  ][]) {
+    if (type === "other") continue;
+    let score = 0;
+    for (const kw of keywords) {
+      if (lower.includes(kw)) score += kw.split(" ").length; // multi-word = higher weight
+    }
+    if (score > 0) scores[type] = score;
+  }
+
+  const sorted = Object.entries(scores).sort(([, a], [, b]) => b - a);
+  return sorted.length > 0 ? (sorted[0][0] as PropertyType) : "other";
+}
+
+// ─── Lighting mood short labels ───────────────────────────────────────────────
+
+const LIGHTING_MOOD_LABELS: Record<DirectorScene["shotType"], string[]> = {
+  "aerial-drone": ["Golden hour", "Blue hour", "High noon"],
+  "dolly-push": ["Warm side-light", "Soft daylight", "Cinematic key"],
+  "interior-pan": ["Warm practicals", "Raking window", "Ambient layered"],
+  "slow-motion": ["Ethereal backlit", "Silhouette rim", "Low-key moody"],
+  "static-wide": ["Magic hour", "Overcast diffused", "High contrast"],
+  "close-up": ["Clean ring-light", "Rim separation", "Warm intimate key"],
+  "crane-shot": ["Sky fill", "Sunset gradient", "Dawn blue-hour"],
+};
+
 const SENSORY_WORDS = [
   "feel",
   "touch",
@@ -270,6 +403,7 @@ export function analyzeScript(text: string): ScriptAnalysis {
     return {
       emotion: "luxury",
       luxuryLevel: 50,
+      propertyType: "other" as PropertyType,
       personaTags: ["General Audience"],
       hookScore: 0,
       hookSuggestions: [
@@ -394,9 +528,12 @@ export function analyzeScript(text: string): ScriptAnalysis {
       "Enigmatic & Alluring — Creates intrigue and exclusive mystique",
   };
 
+  const propertyType = detectPropertyType(text);
+
   return {
     emotion: dominantEmotion,
     luxuryLevel,
+    propertyType,
     personaTags,
     hookScore,
     hookSuggestions: suggestions.slice(0, 3),
@@ -693,6 +830,8 @@ export function generateDirectorScenePlan(
     const lightingOptions = LIGHTING_STYLES[shotType];
     const notesOptions = DIRECTOR_NOTES[shotType];
 
+    const lightingMoodOptions = LIGHTING_MOOD_LABELS[shotType];
+
     return {
       id: `director-scene-${Date.now()}-${index}`,
       text: segText,
@@ -701,6 +840,7 @@ export function generateDirectorScenePlan(
       shotType,
       cameraMove: cameraOptions[shotIndex % cameraOptions.length],
       lighting: lightingOptions[shotIndex % lightingOptions.length],
+      lightingMood: lightingMoodOptions[shotIndex % lightingMoodOptions.length],
       musicMood,
       backgroundStyle: bgGradients[bgIndex],
       directorNotes: notesOptions[shotIndex % notesOptions.length],
@@ -743,6 +883,29 @@ export function getEmotionColor(emotion: ScriptAnalysis["emotion"]): string {
       return "oklch(0.55 0.18 290)";
     case "epic":
       return "oklch(0.70 0.18 50)";
+  }
+}
+
+export function getPropertyTypeLabel(type: PropertyType): string {
+  switch (type) {
+    case "villa":
+      return "Villa / Resort";
+    case "penthouse":
+      return "Penthouse";
+    case "mansion":
+      return "Mansion / Manor";
+    case "commercial":
+      return "Commercial";
+    case "residential":
+      return "Residential";
+    case "development":
+      return "Development";
+    case "land":
+      return "Land / Plot";
+    case "hotel":
+      return "Hotel / Resort";
+    case "other":
+      return "General";
   }
 }
 
