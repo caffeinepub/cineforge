@@ -17,6 +17,7 @@ import {
   Loader2,
   LogIn,
   LogOut,
+  Mic,
   Sparkles,
   User,
   Video,
@@ -32,6 +33,7 @@ const NAV_ITEMS = [
     gold: false,
     accent: false,
     teal: false,
+    purple: false,
   },
   {
     to: "/ai-director",
@@ -40,6 +42,7 @@ const NAV_ITEMS = [
     gold: true,
     accent: false,
     teal: false,
+    purple: false,
   },
   {
     to: "/pipeline",
@@ -48,6 +51,7 @@ const NAV_ITEMS = [
     gold: false,
     accent: true,
     teal: false,
+    purple: false,
   },
   {
     to: "/video-gen",
@@ -56,6 +60,16 @@ const NAV_ITEMS = [
     gold: false,
     accent: false,
     teal: true,
+    purple: false,
+  },
+  {
+    to: "/voice-engine",
+    label: "Voice Engine",
+    icon: Mic,
+    gold: false,
+    accent: false,
+    teal: false,
+    purple: true,
   },
   {
     to: "/projects",
@@ -64,6 +78,7 @@ const NAV_ITEMS = [
     gold: false,
     accent: false,
     teal: false,
+    purple: false,
   },
   {
     to: "/presets",
@@ -72,6 +87,7 @@ const NAV_ITEMS = [
     gold: false,
     accent: false,
     teal: false,
+    purple: false,
   },
   {
     to: "/subscription",
@@ -80,6 +96,7 @@ const NAV_ITEMS = [
     gold: false,
     accent: false,
     teal: false,
+    purple: false,
   },
 ];
 
@@ -139,17 +156,20 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 flex flex-col gap-0.5 px-2 py-3">
-          {NAV_ITEMS.map(({ to, label, icon: Icon, gold, accent, teal }) => (
-            <NavItem
-              key={to}
-              to={to}
-              label={label}
-              Icon={Icon}
-              gold={gold}
-              accent={accent}
-              teal={teal}
-            />
-          ))}
+          {NAV_ITEMS.map(
+            ({ to, label, icon: Icon, gold, accent, teal, purple }) => (
+              <NavItem
+                key={to}
+                to={to}
+                label={label}
+                Icon={Icon}
+                gold={gold}
+                accent={accent}
+                teal={teal}
+                purple={purple}
+              />
+            ),
+          )}
         </nav>
 
         {/* Bottom: User + Auth */}
@@ -208,6 +228,7 @@ function NavItem({
   gold = false,
   accent = false,
   teal = false,
+  purple = false,
 }: {
   to: string;
   label: string;
@@ -215,6 +236,7 @@ function NavItem({
   gold?: boolean;
   accent?: boolean;
   teal?: boolean;
+  purple?: boolean;
 }) {
   const matchRoute = useMatchRoute();
   const isActive = matchRoute({ to, fuzzy: to !== "/" });
@@ -223,20 +245,26 @@ function NavItem({
   const accentColor = "oklch(0.65 0.14 240)";
   // teal = video gen teal color
   const tealColor = "oklch(0.65 0.14 175)";
+  // purple = voice engine purple color
+  const purpleColor = "oklch(0.65 0.18 300)";
 
   const activeStyle =
     !isActive && accent
       ? { color: `${accentColor}B3` }
       : !isActive && teal
         ? { color: `${tealColor}B3` }
-        : undefined;
+        : !isActive && purple
+          ? { color: `${purpleColor}B3` }
+          : undefined;
 
   const activeLabelStyle =
     !isActive && accent
       ? { color: `${accentColor}CC` }
       : !isActive && teal
         ? { color: `${tealColor}CC` }
-        : undefined;
+        : !isActive && purple
+          ? { color: `${purpleColor}CC` }
+          : undefined;
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -249,7 +277,7 @@ function NavItem({
                 ? "nav-active text-primary"
                 : gold
                   ? "text-primary/70 hover:text-primary hover:bg-primary/[0.06]"
-                  : accent || teal
+                  : accent || teal || purple
                     ? "hover:bg-white/[0.05]"
                     : "text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.05]"
             }`}
@@ -295,6 +323,13 @@ function NavItem({
               <span
                 className="hidden lg:block ml-auto w-1.5 h-1.5 rounded-full shrink-0"
                 style={{ background: tealColor }}
+              />
+            )}
+            {/* Purple accent dot for Voice Engine */}
+            {purple && !isActive && (
+              <span
+                className="hidden lg:block ml-auto w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ background: purpleColor }}
               />
             )}
           </Link>

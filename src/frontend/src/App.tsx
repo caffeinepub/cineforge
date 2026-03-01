@@ -23,6 +23,7 @@ import PresetsPage from "@/pages/PresetsPage";
 import ProjectsPage from "@/pages/ProjectsPage";
 import SubscriptionPage from "@/pages/SubscriptionPage";
 import VideoGenPage from "@/pages/VideoGenPage";
+import VoiceEnginePage from "@/pages/VoiceEnginePage";
 
 // Root route with AppShell layout
 const rootRoute = createRootRoute({
@@ -72,6 +73,12 @@ const videoGenRoute = createRoute({
   component: VideoGenPage,
 });
 
+const voiceEngineRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/voice-engine",
+  component: VoiceEnginePage,
+});
+
 const editorNewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/editor/new",
@@ -106,6 +113,7 @@ const routeTree = rootRoute.addChildren([
   aiDirectorRoute,
   pipelineRoute,
   videoGenRoute,
+  voiceEngineRoute,
   projectsRoute,
   presetsRoute,
   subscriptionRoute,
